@@ -1,2 +1,2 @@
 # CATE_simulations
-Simulations from the paper "On a General Class of Orthogonal Learners for the Estimation of Heterogeneous Treatment Effects"
+R code for replicating the simulation study from the paper "On a General Class of Orthogonal Learners for the Estimation of Heterogeneous Treatment Effects"
