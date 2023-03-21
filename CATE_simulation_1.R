@@ -13,7 +13,7 @@ library(SuperLearner)
 n <- 500
 nsim <- 2
 
-p = 20 # Dimension of the covariates vector X
+p = 20 # Dimension of the covariates X
 sigma = 0.5
 
 # Select list of models to be included in the SuperLearner
