@@ -85,7 +85,7 @@ for(i in 1:nsim) {
   colnames(data_train_B)[c(51:54)] <- c("a", "y", "ps", "CATE")
   colnames(data_test)[c(51:54)] <- c("a", "y", "ps", "CATE")
 
-  # Combine the covariates and the exposure into single dataframe 
+  # Combine the covariates and the exposure into a single data frame 
   Z_train_A <- data_train_A[, c(1:51)]
   Z_train_B <- data_train_B[, c(1:51)]
   Z_test <- data_test[, c(1:51)]
