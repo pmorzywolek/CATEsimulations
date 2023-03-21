@@ -70,7 +70,7 @@ for (i in 1:nsim) {
   X_train_B = data.frame(params_train_B$X)
   X_test = data.frame(params_test$X)
   
-  # Combine the covariates and the exposure into single dataframe
+  # Combine the covariates and the exposure into a single data frame
   Z_train_A <- cbind(A_train_A, X_train_A)
   Z_train_B <- cbind(A_train_B, X_train_B)
   Z_test <- cbind(A_test, X_test)
