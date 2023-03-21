@@ -9,11 +9,11 @@ library(ggplot2)
 library(reshape2)
 library(SuperLearner)
 
-# Set initial parameters (number of individuals in each of the datasets: train A, train B and test, and number of simulations)
+# Set initial parameters (number of individuals in each of the data sets: train A, train B and test, and number of simulations)
 n <- 500
 nsim <- 2
 
-p = 20 # Dimension of covariates X
+p = 20 # Dimension of the covariates vector X
 sigma = 0.5
 
 # Select list of models to be included in the SuperLearner
@@ -26,28 +26,26 @@ get.params = function() {
   eta = 0.1
   e = pmax(eta, pmin(sin(pi * X[, 1] * X[, 2] * X[, 3] * X[, 4]), 1 - eta))
   tau = (X[, 1] + X[, 2] + X[, 3]) / 2
-  list(X = X,
-       b = b,
-       tau = tau,
-       e = e)
+  list(X = X, b = b, tau = tau, e = e)
 }
 
 make_matrix = function(x)
   stats::model.matrix( ~ . - 1, x)
 
 # Data frame for the MSE of each method. "T", "IPW", "DR", "R" and "psDR" mean T-, IPW-, DR-, R- and propensity-score-weighted DR-Learner, respectively. "MSE"
-# mean-squared error, "psMSE" is mean-squared error in treated and "powMSE" is propensity-overlap-weighted mean-squared error.
+# is mean-squared error, "psMSE" is mean-squared error in treated and "powMSE" is propensity-overlap-weighted mean-squared error.
 
 res <- data.frame(matrix(nrow = nsim, ncol = 13))
 colnames(res) <- c("T_MSE", "IPW_MSE", "DR_MSE", "R_MSE", "T_powMSE", "IPW_powMSE", "DR_powMSE", "R_powMSE", "T_psMSE", "IPW_psMSE", "DR_psMSE", "R_psMSE", "psDR_psMSE")
 
 for (i in 1:nsim) {
+  
   #####################################
   # Generate the training data sets A and B, and the test data set.
-  # Y is the outcome, X are covaraites and A is the exposure.
+  # Y is the outcome, X are covariates and A is the exposure.
   #####################################
   
-  # Generate the training data set A.
+  # Generate the training data set A
   params_train_A = get.params()
   A_train_A = rbinom(n, 1, params_train_A$e)
   Y1_train_A = params_train_A$b + (1 - 0.5) * params_train_A$tau + sigma * rnorm(n)
@@ -68,12 +66,12 @@ for (i in 1:nsim) {
   Y0_test = params_test$b + (0 - 0.5) * params_test$tau + sigma * rnorm(n)
   Y_test = A_test * Y1_test + (1 - A_test) * Y0_test
   
-  # Set of covariates in the training data sets A and B, and in the test set.
+  # Set of covariates in the training data sets A and B, and in the test set
   X_train_A = data.frame(params_train_A$X)
   X_train_B = data.frame(params_train_B$X)
   X_test = data.frame(params_test$X)
   
-  # Combine the covariates and the exposure into single dataframe
+  # Combine the covariates and the exposure into a single data frame
   Z_train_A <- cbind(A_train_A, X_train_A)
   Z_train_B <- cbind(A_train_B, X_train_B)
   Z_test <- cbind(A_test, X_test)
@@ -102,7 +100,7 @@ for (i in 1:nsim) {
   # Estimate nuisance parameters
   #####################################
   
-  ### Propensity score model
+  ### Propensity score (PS) model
   # Fit the propensity score model on the training data
   model_ps_A = SuperLearner(Y = A_train_A,
                             X = X_train_A,
@@ -125,7 +123,7 @@ for (i in 1:nsim) {
                             X = Z_train_B,
                             SL.library = SL.library)
   
-  # Construct data sets were everyone/noone is treated.
+  # Construct data sets were everyone/no one is treated
   Z_train_A_a1 <- Z_train_A
   Z_train_A_a1$a <- 1
   
@@ -144,14 +142,14 @@ for (i in 1:nsim) {
   Z_test_a0 <- Z_test
   Z_test_a0$a <- 0
   
-  # Compute predictions from the outcome model when everyone/noone is treated.
+  # Compute predictions from the outcome model when everyone/no one is treated
   Z_train_A_a1$Q_pred_a1 <- as.vector(predict(model_Q_B, newdata = Z_train_A_a1, onlySL = TRUE)$pred)
   Z_train_A_a0$Q_pred_a0 <- as.vector(predict(model_Q_B, newdata = Z_train_A_a0, onlySL = TRUE)$pred)
   
   Z_train_B_a1$Q_pred_a1 <- as.vector(predict(model_Q_A, newdata = Z_train_B_a1, onlySL = TRUE)$pred)
   Z_train_B_a0$Q_pred_a0 <- as.vector(predict(model_Q_A, newdata = Z_train_B_a0, onlySL = TRUE)$pred)
   
-  # Add predicted counterfactual to the trainining sets.
+  # Add predicted counterfactual to the training sets
   data_train_A$Q1 <- Z_train_A_a1$Q_pred_a1
   data_train_A$Q0 <- Z_train_A_a0$Q_pred_a0
   
@@ -159,7 +157,7 @@ for (i in 1:nsim) {
   data_train_B$Q0 <- Z_train_B_a0$Q_pred_a0
   
   #####################################
-  # Compute the pseudooutcomes in the training sets.
+  # Compute the pseudo-outcomes in the training sets
   #####################################
   
   # IPW-Learner
@@ -202,7 +200,7 @@ for (i in 1:nsim) {
   A_train_AB <- rbind(A_train_A, A_train_B)
   
   #####################################
-  # Regress the pseudooutcomes in the combined training data set
+  # Regress the pseudo-outcomes in the combined training data set
   #####################################
   
   # IPW-Learner
@@ -216,7 +214,7 @@ for (i in 1:nsim) {
                                         SL.library = SL.library)
   
   # Propensity-overlap-weighted DR-Learner
-  # Compute weights in the set used for regressing propensity-overlap-weighted pseudooutcome
+  # Compute weights in the set used for regressing propensity-overlap-weighted pseudo-outcome
   wt <- as.vector((data_train_AB$a - data_train_AB$ps_SL) ^ 2)
   model_pseudooutcome_R = SuperLearner(Y = data_train_AB$pseudooutcome_R,
                                        X = X_train_AB,
@@ -229,10 +227,10 @@ for (i in 1:nsim) {
                                           SL.library = SL.library)
   
   #####################################
-  # T-Learner (We train T-Learner on combined training data set A and B to make sure that we use the same amount of data for training different methods.)
+  # T-Learner 
   #####################################
   
-  # T-Learner 
+  # We train T-Learner on combined training data set A and B to make sure that we use the same amount of data for training different methods
   model_Q_T <- SuperLearner(Y = data_train_AB$y,
                             X = Z_train_AB,
                             SL.library = SL.library)
